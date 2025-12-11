@@ -1,31 +1,36 @@
 import os
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters
 import wikipediaapi
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+from dotenv import load_dotenv
 
-TOKEN = os.environ.get("TELEGRAM_TOKEN")
+load_dotenv()
+TOKEN = os.getenv("8299291699:AAE3QMvrCWLCQvpiASATDUmYEJsf1BxSxmc")
 
 wiki = wikipediaapi.Wikipedia(
-    user_agent='DiyorbekWikipediaBot/1.0 (t.me/wikipediabydiorbot)',
+    user_agent='DiyorbekWikiBot/1.0 (contact: thenarimonov@gmail.com)',
     language='en'
 )
 
-async def start(update: Update, context):
-    await update.message.reply_text("Salom! Menga Wikipedia haqida so‘rov yozing.")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Salom! Wikipedia botiga xush kelibsiz!\nQidiruv so‘zini yuboring.\nFaqat ingilis tilida!")
 
-async def handle_message(update: Update, context):
+async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.message.text
     page = wiki.page(query)
 
-    if page.exists():
-        summary = page.summary[:1500]
-        await update.message.reply_text(summary)
-    else:
-        await update.message.reply_text("Bu mavzu topilmadi.")
+    if not page.exists():
+        await update.message.reply_text("Topilmadi ❌")
+        return
 
-app = ApplicationBuilder().token(TOKEN).build()
+    summary = page.summary[:1000]
+    await update.message.reply_text(summary)
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT, handle_message))
+def main():
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT, search))
+    app.run_polling()
 
-app.run_polling()
+if __name__ == "__main__":
+    main()
